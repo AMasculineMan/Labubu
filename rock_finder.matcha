@@ -1,0 +1,72 @@
+fn search_rocks_in_forge() -> list<rock> {
+  let forge = get_forge_instance()
+  let rocks = []
+  let game_map = forge.get_map()
+  let entities = game_map.get_all_entities()
+  
+  for entity in entities {
+    if entity.is_rock() {
+      rocks.push(entity)
+    }
+  }
+  
+  return rocks
+}
+
+fn find_nearest_rock(player_position) -> rock? {
+  let rocks = search_rocks_in_forge()
+  let nearest = null
+  let min_distance = infinity
+  
+  for rock in rocks {
+    let distance = calculate_distance(player_position, rock.position)
+    if distance < min_distance {
+      min_distance = distance
+      nearest = rock
+    }
+  }
+  
+  return nearest
+}
+
+fn mine_rock_automatically(rock) -> bool {
+  let forge = get_forge_instance()
+  let player = forge.get_player()
+  
+  if rock == null {
+    return false
+  }
+  
+  let rock_position = rock.position
+  let player_position = player.position
+  
+  if !is_in_mining_range(player_position, rock_position) {
+    move_player_to_rock(player, rock_position)
+  }
+  
+  player.mine(rock)
+  
+  return rock.is_mined()
+}
+
+fn auto_search_and_mine_rocks() {
+  let forge = get_forge_instance()
+  let running = true
+  
+  while running {
+    let player = forge.get_player()
+    let nearest_rock = find_nearest_rock(player.position)
+    
+    if nearest_rock != null {
+      let mined = mine_rock_automatically(nearest_rock)
+      if mined {
+        debug_log("Rock mined successfully!")
+      }
+    } else {
+      debug_log("No rocks found in the forge")
+      running = false
+    }
+    
+    sleep(100)
+  }
+}
